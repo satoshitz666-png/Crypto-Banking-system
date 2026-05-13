@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Banking Infrastructure | API Ecosystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --blue-200: #bfdbfe;
+            --blue-300: #93c5fd;
+            --blue-400: #60a5fa;
+            --blue-500: #3b82f6;
+            --blue-600: #2563eb;
+            --blue-700: #1d4ed8;
+            --blue-800: #1e40af;
+            --blue-900: #1e3a8a;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--slate-50);
+            color: var(--slate-800);
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--blue-100);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
+        .glass-panel-hover:hover {
+            border-color: var(--blue-300);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.05), 0 4px 6px -2px rgba(37, 99, 235, 0.025);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .flow-line {
+            stroke-dasharray: 10;
+            animation: dash 1.5s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -20; }
+        }
+        .pulse-dot {
+            animation: pulse-blue 2s infinite;
+        }
+        @keyframes pulse-blue {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-online { background-color: #10b981; box-shadow: 0 0 4px #10b981; }
+        .status-warning { background-color: #f59e0b; box-shadow: 0 0 4px #f59e0b; }
+        .status-offline { background-color: #ef4444; box-shadow: 0 0 4px #ef4444; }
+        .api-badge { font-size: 0.65rem; letter-spacing: 0.05em; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-blue-100 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">CB</div>
+            <div class="flex flex-col">
+                <span class="text-lg font-bold tracking-tight text-slate-900">CryptoBank<span class="text-blue-600">Infra</span></span>
+                <span class="text-[10px] uppercase tracking-widest text-blue-500 font-semibold">Institutional Grade</span>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+            <a href="#" class="hover:text-blue-600 transition">Dashboard</a>
+            <a href="#" class="text-blue-600">API Ecosystem</a>
+            <a href="#" class="hover:text-blue-600 transition">Compliance</a>
+            <a href="#" class="hover:text-blue-600 transition">Treasury</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-100 text-xs text-blue-700 font-mono">
+                <span class="status-dot status-online"></span> SYSTEM OPERATIONAL
+            </div>
+            <div class="w-8 h-8 bg-slate-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjU2M2ViIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE5IDIxdi0yYTQgNCAwIDAgMC00LTRoLTZhNCA0IDAgMCAwLTQgNHYyIj48L3BhdGg+PGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0Ij48L2NpcmNsZT48L3N2Zz4=" alt="User">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- Hero / Manifesto Section -->
+        <section class="glass-panel rounded-2xl p-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60"></div>
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs font-semibold text-blue-700 mb-4">
+                        <i data-lucide="globe" class="w-3 h-3"></i> GLOBAL LIQUIDITY HUB
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+                        <span class="block text-slate-900">The Future of Money</span>
+                        <span class="gradient-text">Infrastructure</span>
+                    </h1>
+                    <p class="text-slate-600 text-lg max-w-lg leading-relaxed">
+                        Unified API layer connecting Fiat Rails, Blockchain Networks, and Banking Systems. 
+                        Seamless On/Off-Ramp, Cross-Border Transfers, and Institutional Compliance.
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-200 transition flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i> Testnet API
+                    </button>
+                    <button class="px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-semibold shadow-sm transition flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> Documentation
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecosystem Architecture Visual -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Architecture Diagram -->
+            <div class="lg:col-span-8 glass-panel rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i> System Architecture
+                    </h2>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded font-medium">Live Status</span>
+                    </div>
+                </div>
+                
+                <!-- SVG Flow Diagram -->
+                <div class="relative h-64 w-full bg-slate-50 rounded-xl border border-slate-200 overflow-hidden p-4">
+                    <!-- Background Grid -->
+                    <div class="absolute inset-0" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3;"></div>
+                    
+                    <svg class="w-full h-full relative z-10" viewBox="0 0 800 250" preserveAspectRatio="xMidYMid meet">
+                        <!-- Connections -->
+                        <path d="M 150 125 L 300 125" stroke="#93c5fd" stroke-width="3" class="flow-line" fill="none"/>
+                        <path d="M 380 125 L 520 125" stroke="#60a5fa" stroke-width="3" class="flow-line" fill="none"/>
+                        <path d="M 600 125 L 700 125" stroke="#3b82f6" stroke-width="3" class="flow-line" fill="none"/>
+
+                        <!-- Layer 1: Client -->
+                        <g transform="translate(40, 75)">
+                            <rect width="110" height="100" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+                            <text x="55" y="35" text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b">CLIENT</text>
+                            <text x="55" y="55" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e3a8a">APPS</text>
+                            <text x="55" y="75" text-anchor="middle" font-size="9" fill="#94a3b8">Mobile / Web</text>
+                            <text x="55" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">Merchant API</text>
+                        </g>
+
+                        <!-- Layer 2: API Gateway -->
+                        <g transform="translate(300, 75)">
+                            <rect width="80" height="100" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+                            <circle cx="40" cy="40" r="4" fill="#2563eb" class="pulse-dot"/>
+                            <text x="40" y="35" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e3a8a">GATEWAY</text>
+                            <text x="40" y="55" text-anchor="middle" font-size="9" fill="#2563eb">Auth & Rate</text>
+                            <text x="40" y="70" text-anchor="middle" font-size="9" fill="#2563eb">KYC Hooks</text>
+                            <text x="40" y="85" text-anchor="middle" font-size="9" fill="#2563eb">WAF</text>
+                        </g>
+
+                        <!-- Layer 3: Core Services -->
+                        <g transform="translate(520, 50)">
+                            <rect width="80" height="150" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+                            <text x="40" y="30" text-anchor="middle" font-size="10" font-weight="bold" fill="#1e3a8a">CORE</text>
+                            <text x="40" y="50" text-anchor="middle" font-size="9" fill="#1e40af">Wallet</text>
+                            <text x="40" y="65" text-anchor="middle" font-size="9" fill="#1e40af">Trading</text>
+                            <text x="40" y="80" text-anchor="middle" font-size="9" fill="#1e40af">Lending</text>
+                            <text x="40" y="95" text-anchor="middle" font-size="9" fill="#1e40af">FX Engine</text>
+                            <text x="40" y="110" text-anchor="middle" font-size="9" fill="#1e40af">Compliance</text>
+                            <text x="40" y="125" text-anchor="middle" font-size="9" fill="#1e40af">Cards</text>
+                        </g>
+
+                        <!-- Layer 4: External -->
+                        <g transform="translate(700, 50)">
+                            <rect width="100" height="150" rx="12" fill="white" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4"/>
+                            <text x="50" y="30" text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b">INFRA</text>
+                            <text x="50" y="55" text-anchor="middle" font-size="11" fill="#f59e0b">BTC/ETH/SOL</text>
+                            <text x="50" y="75" text-anchor="middle" font-size="11" fill="#3b82f6">Visa/SWIFT</text>
+                            <text x="50" y="95" text-anchor="middle" font-size="11" fill="#10b981">Bank APIs</text>
+                            <text x="50" y="115" text-anchor="middle" font-size="11" fill="#8b5cf6">DEX/CEX</text>
+                            <text x="50" y="135" text-anchor="middle" font-size="11" fill="#ef4444">AML/KYC</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
+                <div class="glass-panel glass-panel-hover rounded-xl p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">AUM (Total Value)</p>
+                            <h3 class="text-2xl font-bold text-slate-800 mt-1">$842.5M</h3>
+                            <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                                <i data-lucide="trending-up" class="w-3 h-3"></i> +12.4% 24h
+                            </p>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                            <i data-lucide="landmark" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel glass-panel-hover rounded-xl p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">API Latency (Avg)</p>
+                            <h3 class="text-2xl font-bold text-slate-800 mt-1">42ms</h3>
+                            <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                                <i data-lucide="activity" class="w-3 h-3"></i> Optimal
+                            </p>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel glass-panel-hover rounded-xl p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Volume 24h</p>
+                            <h3 class="text-2xl font-bold text-slate-800 mt-1">$128.2M</h3>
+                            <p class="text-xs text-slate-500 font-medium mt-1">14.2k Transactions</p>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel glass-panel-hover rounded-xl p-5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Risk Score</p>
+                            <h3 class="text-2xl font-bold text-emerald-600 mt-1">Low</h3>
+                            <p class="text-xs text-slate-500 font-medium mt-1">0.04% Flagged Tx</p>
+                        </div>
+                        <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Management & Ecosystem -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            
+            <!-- API Endpoints List -->
+            <div class="xl:col-span-2 glass-panel rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="code-2" class="w-5 h-5 text-blue-600"></i> Active API Modules
+                    </h2>
+                    <button class="text-sm text-blue-600 hover:underline font-medium">View All Endpoints</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold">Module</th>
+                                <th class="px-4 py-3 font-semibold">Endpoint</th>
+                                <th class="px-4 py-3 font-semibold">Method</th>
+                                <th class="px-4 py-3 font-semibold">Status</th>
+                                <th class="px-4 py-3 font-semibold text-right">Latency</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Deposit / On-Ramp</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/deposit/bank-transfer</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-online"></span>Active</span></td>
+                                <td class="px-4 py-3 text-right font-mono">24ms</td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Trade Engine</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/trade/buy</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-online"></span>Active</span></td>
+                                <td class="px-4 py-3 text-right font-mono">45ms</td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Cross-Border FX</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/crossborder/send</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-online"></span>Active</span></td>
+                                <td class="px-4 py-3 text-right font-mono">82ms</td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Bridge (Multi-Chain)</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/bridge/execute</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-warning"></span>Maintenance</span></td>
+                                <td class="px-4 py-3 text-right font-mono">-</td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Lending / Pawn</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/loan/create</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-online"></span>Active</span></td>
+                                <td class="px-4 py-3 text-right font-mono">38ms</td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/50 transition">
+                                <td class="px-4 py-3 font-medium text-slate-800">Card Processor</td>
+                                <td class="px-4 py-3 font-mono text-xs text-slate-600">/card/authorize</td>
+                                <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">POST</span></td>
+                                <td class="px-4 py-3"><span class="flex items-center"><span class="status-dot status-online"></span>Active</span></td>
+                                <td class="px-4 py-3 text-right font-mono">12ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Liquidity & Compliance -->
+            <div class="space-y-6">
+                <!-- Chart -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="droplet" class="w-4 h-4 text-blue-600"></i> Liquidity Allocation
+                    </h3>
+                    <div class="h-40">
+                        <canvas id="liquidityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AML Feed -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-blue-600"></i> Live Compliance Feed
+                    </h3>
+                    <div class="space-y-3 h-32 overflow-y-auto scroll-hide pr-1">
+                        <div class="flex items-start gap-3 p-2 bg-red-50 rounded border border-red-100">
+                            <div class="mt-1 w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-xs text-slate-800 font-medium">High Risk Transfer Blocked</p>
+                                <p class="text-[10px] text-slate-500">User: #8842 • Amount: $45k • Source: Sanction List</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2 bg-yellow-50 rounded border border-yellow-100">
+                            <div class="mt-1 w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-xs text-slate-800 font-medium">Unusual Activity Flagged</p>
+                                <p class="text-[10px] text-slate-500">User: #1029 • Rapid Micro-deposits • Review Pending</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-2 bg-green-50 rounded border border-green-100">
+                            <div class="mt-1 w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-xs text-slate-800 font-medium">KYC Approved: Corporate</p>
+                                <p class="text-[10px] text-slate-500">Entity: Acme Holdings • Tier: 3 • Risk: Low</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cross-Border Corridor Map Placeholder / Stats -->
+        <section class="glass-panel rounded-2xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="globe-2" class="w-5 h-5 text-blue-600"></i> Global Corridors
+                </h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">ID</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-800">US</div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">IDR ↔ USD</p>
+                        <p class="text-xs text-slate-500">Volume: $2.4M/day</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">EU</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-800">SG</div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">EUR ↔ SGD</p>
+                        <p class="text-xs text-slate-500">Volume: $1.8M/day</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">UK</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-800">JP</div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">GBP ↔ JPY</p>
+                        <p class="text-xs text-slate-500">Volume: $1.2M/day</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-700">BR</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center text-xs font-bold text-blue-800">AR</div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">BRL ↔ ARS</p>
+                        <p class="text-xs text-slate-500">Volume: $800k/day</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-auto border-t border-slate-200 bg-white py-6">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-xs text-slate-500">© 2026 CryptoBank Infrastructure. Institutional Grade System.</p>
+            <div class="flex gap-4 text-xs text-slate-500">
+                <span>API Status: <span class="text-emerald-600 font-medium">99.99% Uptime</span></span>
+                <span class="border-l border-slate-300 pl-4">Latency: 42ms</span>
+                <span class="border-l border-slate-300 pl-4">Version: v2.4.1-stable</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Chart.js Configuration
+        const ctx = document.getElementById('liquidityChart').getContext('2d');
+        const liquidityChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Stablecoins', 'BTC', 'ETH', 'Fiat USD', 'Fiat EUR', 'Altcoins'],
+                datasets: [{
+                    data: [45, 20, 15, 10, 7, 3],
+                    backgroundColor: [
+                        '#2563eb', // Blue
+                        '#f59e0b', // Orange
+                        '#64748b', // Slate
+                        '#10b981', // Green
+                        '#3b82f6', // Light Blue
+                        '#94a3b8'  // Light Slate
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 20,
+                            font: {
+                                size: 10,
+                                family: "'Inter', sans-serif"
+                            }
+                        }
+                    }
+                },
+                cutout: '75%'
+            }
+        });
+
+        // Simulate live latency updates
+        setInterval(() => {
+            const latencies = document.querySelectorAll('td.text-right.font-mono');
+            latencies.forEach(td => {
+                if (td.innerText !== '-') {
+                    const base = parseInt(td.innerText);
+                    const jitter = Math.floor(Math.random() * 10) - 5;
+                    td.innerText = Math.max(10, base + jitter) + 'ms';
+                }
+            });
+        }, 2000);
+    </script>
+</body>
+</html>
+
