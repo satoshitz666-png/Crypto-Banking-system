@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Banking Platform | Admin Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .view-section { display: none; animation: fadeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .view-section.active { display: block; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+    .toast { transform: translateX(100%); transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0; }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .sidebar-link.active { background: linear-gradient(90deg, #2563eb, #1d4ed8); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="adminSidebar" class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 fixed md:relative h-full z-40 transform -translate-x-full md:translate-x-0">
+      <div class="h-16 flex items-center px-6 border-b border-slate-700">
+        <i class="fa-solid fa-vault text-blue-500 text-xl mr-3"></i>
+        <span class="text-white font-bold text-lg tracking-wide">NexusBank</span>
+        <button id="sidebarCloseMobile" class="ml-auto md:hidden text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-thin">
+        <button data-view="dashboard" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all active">
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
+        </button>
+        <button data-view="users" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+          <i class="fa-solid fa-users w-5 text-center"></i> Users & KYC
+        </button>
+        <button data-view="compliance" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+          <i class="fa-solid fa-shield-halved w-5 text-center"></i> AML & Risk
+        </button>
+        <button data-view="transactions" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+          <i class="fa-solid fa-arrow-right-arrow-left w-5 text-center"></i> Transactions
+        </button>
+        <button data-view="loans" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+          <i class="fa-solid fa-landmark w-5 text-center"></i> Loans & Cards
+        </button>
+        <button data-view="audit" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+          <i class="fa-solid fa-file-shield w-5 text-center"></i> Audit Logs
+        </button>
+      </nav>
+      <div class="p-4 border-t border-slate-700">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold">A</div>
+          <div>
+            <p class="text-white text-sm font-medium">Super Admin</p>
+            <p class="text-slate-500 text-xs">Compliance Team</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+      <!-- Header -->
+      <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0">
+        <div class="flex items-center gap-4">
+          <button id="sidebarToggleMobile" class="md:hidden text-slate-600 hover:text-slate-900">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+          <h2 id="pageTitle" class="text-lg font-semibold text-slate-800">Dashboard Overview</h2>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="relative hidden md:block">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input id="globalSearch" type="text" placeholder="Search users, txids, assets..." class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 transition-all">
+          </div>
+          <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+            <i class="fa-regular fa-bell"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div id="contentArea" class="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin bg-slate-50">
+        
+        <!-- Dashboard View -->
+        <section id="view-dashboard" class="view-section active">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-slate-500 text-sm font-medium">Total Users</p>
+                  <h3 class="text-2xl font-bold mt-1">14,285</h3>
+                </div>
+                <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">+12.5%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">342 pending KYC</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-slate-500 text-sm font-medium">24h Volume</p>
+                  <h3 class="text-2xl font-bold mt-1">$2.4M</h3>
+                </div>
+                <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">+5.2%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Across BTC, ETH, SOL</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-slate-500 text-sm font-medium">Active Wallets</p>
+                  <h3 class="text-2xl font-bold mt-1">8,904</h3>
+                </div>
+                <span class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded-full">Stable</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">Multi-chain supported</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-slate-500 text-sm font-medium">AML Alerts</p>
+                  <h3 class="text-2xl font-bold mt-1 text-red-500">18</h3>
+                </div>
+                <span class="bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full">High Priority</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-2">5 require immediate review</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Transaction Volume (30 Days)</h3>
+              <div class="h-64"><canvas id="volumeChart"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Asset Distribution</h3>
+              <div class="h-64 flex items-center justify-center"><canvas id="assetChart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+              <h3 class="text-base font-semibold">Recent Activity</h3>
+              <button onclick="switchView('transactions')" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th class="px-6 py-3 font-medium">User</th>
+                    <th class="px-6 py-3 font-medium">Type</th>
+                    <th class="px-6 py-3 font-medium">Asset</th>
+                    <th class="px-6 py-3 font-medium">Amount</th>
+                    <th class="px-6 py-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTxTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Users View -->
+        <section id="view-users" class="view-section">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="relative w-full md:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input id="userSearchInput" type="text" placeholder="Search email or name..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex gap-2">
+              <button class="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition">Export CSV</button>
+              <button class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">Add User</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                  <th class="px-6 py-3 font-medium">Profile</th>
+                  <th class="px-6 py-3 font-medium">Tier</th>
+                  <th class="px-6 py-3 font-medium">KYC Status</th>
+                  <th class="px-6 py-3 font-medium">AML Risk</th>
+                  <th class="px-6 py-3 font-medium">Wallets</th>
+                  <th class="px-6 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Compliance View -->
+        <section id="view-compliance" class="view-section">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Risk Score Distribution</h3>
+              <div class="h-48"><canvas id="riskChart"></canvas></div>
+            </div>
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Active AML Alerts</h3>
+              <div class="space-y-3" id="alertsList"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transactions View -->
+        <section id="view-transactions" class="view-section">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-6 flex flex-wrap gap-3 items-center">
+            <select id="txFilterType" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="all">All Types</option>
+              <option value="deposit">Deposit</option>
+              <option value="withdraw">Withdraw</option>
+              <option value="swap">Swap</option>
+              <option value="send">Send</option>
+            </select>
+            <select id="txFilterStatus" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="all">All Statuses</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+            <div class="ml-auto text-sm text-slate-500" id="txCountDisplay">Showing 50 records</div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                  <th class="px-6 py-3 font-medium">Tx ID</th>
+                  <th class="px-6 py-3 font-medium">User</th>
+                  <th class="px-6 py-3 font-medium">Type</th>
+                  <th class="px-6 py-3 font-medium">Asset</th>
+                  <th class="px-6 py-3 font-medium">Amount</th>
+                  <th class="px-6 py-3 font-medium">Status</th>
+                  <th class="px-6 py-3 font-medium">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Loans & Cards View -->
+        <section id="view-loans" class="view-section">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Active Crypto Loans</h3>
+              <div class="space-y-4" id="loansList"></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h3 class="text-base font-semibold mb-4">Issued Debit Cards</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="cardsGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Audit Logs View -->
+        <section id="view-audit" class="view-section">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-6">
+            <div class="flex justify-between items-center">
+              <h3 class="text-base font-semibold">System Audit Trail</h3>
+              <button class="text-sm text-slate-500 hover:text-blue-600"><i class="fa-solid fa-filter mr-1"></i> Filter</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                  <th class="px-6 py-3 font-medium">Timestamp</th>
+                  <th class="px-6 py-3 font-medium">Admin</th>
+                  <th class="px-6 py-3 font-medium">Action</th>
+                  <th class="px-6 py-3 font-medium">Target Entity</th>
+                  <th class="px-6 py-3 font-medium">IP Address</th>
+                  <th class="px-6 py-3 font-medium">Details</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    // --- Mock Data ---
+    const mockUsers = [
+      { id: 'usr_001', email: 'alice.m@domain.com', name: 'Alice M.', tier: 'Gold', kyc: 'verified', risk: 12, wallets: 3 },
+      { id: 'usr_002', email: 'bob.k@domain.com', name: 'Bob K.', tier: 'Silver', kyc: 'pending', risk: 45, wallets: 2 },
+      { id: 'usr_003', email: 'charlie.s@domain.com', name: 'Charlie S.', tier: 'Platinum', kyc: 'verified', risk: 8, wallets: 5 },
+      { id: 'usr_004', email: 'diana.r@domain.com', name: 'Diana R.', tier: 'Basic', kyc: 'rejected', risk: 78, wallets: 1 },
+      { id: 'usr_005', email: 'evan.t@domain.com', name: 'Evan T.', tier: 'Gold', kyc: 'verified', risk: 22, wallets: 3 },
+      { id: 'usr_006', email: 'fiona.l@domain.com', name: 'Fiona L.', tier: 'Basic', kyc: 'pending', risk: 30, wallets: 1 },
+    ];
+
+    const mockTx = [
+      { id: '0x7a8f...', user: 'Alice M.', type: 'send', asset: 'ETH', amount: 1.25, status: 'completed', time: '2 mins ago' },
+      { id: '0x9b2c...', user: 'Bob K.', type: 'deposit', asset: 'BTC', amount: 0.045, status: 'pending', time: '15 mins ago' },
+      { id: '0x3d4e...', user: 'Charlie S.', type: 'swap', asset: 'SOL/USDC', amount: 1200, status: 'completed', time: '45 mins ago' },
+      { id: '0x1f2a...', user: 'Diana R.', type: 'withdraw', asset: 'USDT', amount: 5000, status: 'failed', time: '1 hour ago' },
+      { id: '0x8c9d...', user: 'Alice M.', type: 'receive', asset: 'BTC', amount: 0.5, status: 'completed', time: '3 hours ago' },
+      { id: '0x4e5f...', user: 'Evan T.', type: 'send', asset: 'ETH', amount: 2.1, status: 'completed', time: '4 hours ago' },
+    ];
+
+    const mockAlerts = [
+      { id: 'alt_001', user: 'Diana R.', risk: 78, type: 'High Volume Withdraw', status: 'open', time: '1h ago' },
+      { id: 'alt_002', user: 'Unknown IP', risk: 65, type: 'Rapid Address Change', status: 'investigating', time: '3h ago' },
+      { id: 'alt_003', user: 'Bob K.', risk: 45, type: 'Sanctioned Chain Interaction', status: 'resolved', time: '5h ago' },
+    ];
+
+    const mockLoans = [
+      { id: 'ln_001', user: 'Charlie S.', collateral: '50 BTC', amount: '$1.2M', ltv: '60%', status: 'Active' },
+      { id: 'ln_002', user: 'Alice M.', collateral: '200 ETH', amount: '$450K', ltv: '45%', status: 'Warning' },
+    ];
+
+    const mockCards = [
+      { id: 'card_001', user: 'Alice M.', last4: '4289', type: 'Virtual', limit: '$15K' },
+      { id: 'card_002', user: 'Charlie S.', last4: '1102', type: 'Physical', limit: '$50K' },
+      { id: 'card_003', user: 'Bob K.', last4: '8834', type: 'Virtual', limit: '$5K' },
+    ];
+
+    const mockAudit = [
+      { time: '2026-05-13 14:22', admin: 'Super Admin', action: 'KYC_APPROVED', target: 'usr_001', ip: '192.168.1.10', details: 'Manual review passed' },
+      { time: '2026-05-13 12:15', admin: 'Compliance Bot', action: 'AML_FLAGGED', target: 'usr_004', ip: '10.0.0.5', details: 'Threshold exceeded' },
+      { time: '2026-05-13 09:00', admin: 'System', action: 'WALLET_CREATED', target: 'usr_002', ip: '10.0.0.1', details: 'BTC, ETH chains added' },
+    ];
+
+    // --- State & Utils ---
+    let activeView = 'dashboard';
+    const chartInstances = {};
+
+    const formatRisk = (score) => score < 30 ? 'Low' : score < 60 ? 'Medium' : 'High';
+    const statusBadge = (status) => {
+      const map = { verified: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', rejected: 'bg-red-100 text-red-700', completed: 'bg-green-100 text-green-700', failed: 'bg-red-100 text-red-700', open: 'bg-red-100 text-red-700', investigating: 'bg-blue-100 text-blue-700', resolved: 'bg-gray-100 text-gray-700', Active: 'bg-green-100 text-green-700', Warning: 'bg-yellow-100 text-yellow-700' };
+      return `<span class="px-2 py-1 rounded-full text-xs font-semibold ${map[status] || 'bg-gray-100 text-gray-700'} capitalize">${status}</span>`;
+    };
+
+    const showToast = (message, type = 'success') => {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast flex items-center gap-3 p-4 rounded-lg shadow-lg border ${type === 'success' ? 'bg-white border-green-200' : 'bg-white border-red-200'} min-w-[280px]`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check text-green-500' : 'fa-triangle-exclamation text-red-500'} text-lg"></i><span class="text-sm font-medium text-slate-700">${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+
+    // --- View Rendering ---
+    const renderRecentTx = () => {
+      const tbody = document.getElementById('recentTxTable');
+      tbody.innerHTML = mockTx.slice(0, 4).map(t => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+          <td class="px-6 py-4 font-medium text-slate-700">${t.user}</td>
+          <td class="px-6 py-4 capitalize text-slate-600">${t.type}</td>
+          <td class="px-6 py-4 font-mono text-xs bg-slate-100 rounded w-fit px-2 py-1">${t.asset}</td>
+          <td class="px-6 py-4 font-semibold">${t.amount.toLocaleString()}</td>
+          <td class="px-6 py-4">${statusBadge(t.status)}</td>
+        </tr>
+      `).join('');
+    };
+
+    const renderUsersTable = (filter = '') => {
+      const tbody = document.getElementById('usersTableBody');
+      const filtered = mockUsers.filter(u => u.email.includes(filter.toLowerCase()) || u.name.toLowerCase().includes(filter.toLowerCase()));
+      tbody.innerHTML = filtered.map(u => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">${u.name.charAt(0)}</div>
+              <div><p class="font-medium text-slate-700">${u.email}</p><p class="text-xs text-slate-500">${u.name}</p></div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-slate-600">${u.tier}</td>
+          <td class="px-6 py-4">${statusBadge(u.kyc)}</td>
+          <td class="px-6 py-4 font-semibold ${u.risk > 50 ? 'text-red-600' : u.risk > 20 ? 'text-yellow-600' : 'text-green-600'}">${u.risk} (${formatRisk(u.risk)})</td>
+          <td class="px-6 py-4 text-slate-600">${u.wallets}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="showToast('User profile opened for review')" class="text-blue-600 hover:text-blue-800 text-xs font-medium mr-2">View</button>
+            <button onclick="showToast('KYC workflow initiated', 'info')" class="text-slate-500 hover:text-slate-700 text-xs font-medium">KYC</button>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    const renderAlerts = () => {
+      const list = document.getElementById('alertsList');
+      list.innerHTML = mockAlerts.map(a => `
+        <div class="flex items-center justify-between p-4 rounded-lg border ${a.status === 'open' ? 'border-red-200 bg-red-50' : a.status === 'investigating' ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="font-semibold text-slate-800">${a.user}</span> ${statusBadge(a.status)}</div>
+            <p class="text-sm text-slate-600">${a.type} • Risk: <span class="font-bold ${a.risk > 60 ? 'text-red-600' : 'text-yellow-600'}">${a.risk}</span></p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="showToast('Alert flagged for investigation', 'info')" class="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-medium hover:bg-slate-100">Investigate</button>
+            <button onclick="showToast('Alert resolved and logged')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Resolve</button>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    const renderTransactionsTable = (typeFilter = 'all', statusFilter = 'all') => {
+      const tbody = document.getElementById('transactionsTableBody');
+      const filtered = mockTx.filter(t => 
+        (typeFilter === 'all' || t.type === typeFilter) && 
+        (statusFilter === 'all' || t.status === statusFilter)
+      );
+      document.getElementById('txCountDisplay').textContent = `Showing ${filtered.length} records`;
+      tbody.innerHTML = filtered.map(t => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+          <td class="px-6 py-4 font-mono text-xs text-slate-500">${t.id}</td>
+          <td class="px-6 py-4 font-medium text-slate-700">${t.user}</td>
+          <td class="px-6 py-4 capitalize text-slate-600">${t.type}</td>
+          <td class="px-6 py-4 font-mono text-xs bg-slate-100 rounded w-fit px-2 py-1">${t.asset}</td>
+          <td class="px-6 py-4 font-semibold">${t.amount.toLocaleString()}</td>
+          <td class="px-6 py-4">${statusBadge(t.status)}</td>
+          <td class="px-6 py-4 text-slate-500 text-xs">${t.time}</td>
+        </tr>
+      `).join('');
+    };
+
+    const renderLoansAndCards = () => {
+      document.getElementById('loansList').innerHTML = mockLoans.map(l => `
+        <div class="p-4 rounded-lg border border-slate-200 bg-slate-50">
+          <div class="flex justify-between items-center mb-2"><h4 class="font-medium">${l.user}</h4> ${statusBadge(l.status)}</div>
+          <div class="grid grid-cols-3 gap-4 text-sm mt-2">
+            <div><span class="text-slate-500">Collateral</span><p class="font-semibold">${l.collateral}</p></div>
+            <div><span class="text-slate-500">Loan Amt</span><p class="font-semibold">${l.amount}</p></div>
+            <div><span class="text-slate-500">LTV</span><p class="font-semibold">${l.ltv}</p></div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('cardsGrid').innerHTML = mockCards.map(c => `
+        <div class="p-4 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div class="flex justify-between items-start mb-6">
+            <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded">${c.type}</span>
+            <i class="fa-brands fa-cc-visa text-2xl opacity-80"></i>
+          </div>
+          <p class="text-lg tracking-widest font-mono mb-4">**** **** **** ${c.last4}</p>
+          <div class="flex justify-between text-xs text-slate-300">
+            <span>Cardholder: ${c.user}</span>
+            <span>Limit: ${c.limit}</span>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    const renderAuditTable = () => {
+      document.getElementById('auditTableBody').innerHTML = mockAudit.map(a => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+          <td class="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">${a.time}</td>
+          <td class="px-6 py-4 font-medium text-slate-700">${a.admin}</td>
+          <td class="px-6 py-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-mono">${a.action}</span></td>
+          <td class="px-6 py-4 font-mono text-xs text-slate-600">${a.target}</td>
+          <td class="px-6 py-4 text-slate-500 text-xs">${a.ip}</td>
+          <td class="px-6 py-4 text-slate-500 text-xs max-w-xs truncate">${a.details}</td>
+        </tr>
+      `).join('');
+    };
+
+    // --- Chart Initialization ---
+    const initCharts = () => {
+      if (chartInstances.volume) chartInstances.volume.destroy();
+      if (chartInstances.asset) chartInstances.asset.destroy();
+      if (chartInstances.risk) chartInstances.risk.destroy();
+
+      const ctxVol = document.getElementById('volumeChart').getContext('2d');
+      chartInstances.volume = new Chart(ctxVol, {
+        type: 'line',
+        data: {
+          labels: ['1D', '2D', '3D', '4D', '5D', '6D', '7D'],
+          datasets: [{
+            label: 'Volume ($M)',
+            data: [1.2, 1.8, 2.1, 1.5, 2.4, 2.8, 2.4],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { grid: { display: false } }, y: { grid: { color: '#f1f5f9' }, ticks: { callback: v => '$' + v + 'M' } } }
+        }
+      });
+
+      const ctxAsset = document.getElementById('assetChart').getContext('2d');
+      chartInstances.asset = new Chart(ctxAsset, {
+        type: 'doughnut',
+        data: {
+          labels: ['BTC', 'ETH', 'USDC', 'SOL', 'Others'],
+          datasets: [{ data: [35, 25, 20, 15, 5], backgroundColor: ['#f59e0b', '#6366f1', '#10b981', '#3b82f6', '#94a3b8'], borderWidth: 0, hoverOffset: 8 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } }
+      });
+
+      const ctxRisk = document.getElementById('riskChart').getContext('2d');
+      chartInstances.risk = new Chart(ctxRisk, {
+        type: 'bar',
+        data: {
+          labels: ['Low (<30)', 'Medium (30-60)', 'High (>60)'],
+          datasets: [{ label: 'Users', data: [85, 12, 3], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#f1f5f9' } } } }
+      });
+    };
+
+    // --- Navigation & Events ---
+    const switchView = (viewId) => {
+      activeView = viewId;
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      
+      document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[data-view="${viewId}"]`).classList.add('active');
+      
+      const titles = { dashboard: 'Dashboard Overview', users: 'User Management', compliance: 'AML & Risk Compliance', transactions: 'Transaction Ledger', loans: 'Loans & Cards Management', audit: 'System Audit Logs' };
+      document.getElementById('pageTitle').textContent = titles[viewId] || 'Dashboard';
+      
+      if (viewId === 'dashboard') initCharts();
+      if (window.innerWidth < 768) {
+        document.getElementById('adminSidebar').classList.add('-translate-x-full');
+      }
+    };
+
+    // Event Listeners
+    document.querySelectorAll('[data-view]').forEach(btn => btn.addEventListener('click', (e) => switchView(e.currentTarget.dataset.view)));
+    document.getElementById('sidebarToggleMobile').addEventListener('click', () => document.getElementById('adminSidebar').classList.remove('-translate-x-full'));
+    document.getElementById('sidebarCloseMobile').addEventListener('click', () => document.getElementById('adminSidebar').classList.add('-translate-x-full'));
+
+    document.getElementById('userSearchInput').addEventListener('input', (e) => renderUsersTable(e.target.value));
+    document.getElementById('txFilterType').addEventListener('change', (e) => renderTransactionsTable(e.target.value, document.getElementById('txFilterStatus').value));
+    document.getElementById('txFilterStatus').addEventListener('change', (e) => renderTransactionsTable(document.getElementById('txFilterType').value, e.target.value));
+    document.getElementById('globalSearch').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        switchView('users');
+        document.getElementById('userSearchInput').value = e.target.value;
+        renderUsersTable(e.target.value);
+        showToast(`Global search initiated for "${e.target.value}"`, 'info');
+      }
+    });
+
+    // --- Init ---
+    const init = () => {
+      renderRecentTx();
+      renderUsersTable();
+      renderAlerts();
+      renderTransactionsTable();
+      renderLoansAndCards();
+      renderAuditTable();
+      initCharts();
+      window.addEventListener('resize', () => {
+        if (activeView === 'dashboard') initCharts();
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+
